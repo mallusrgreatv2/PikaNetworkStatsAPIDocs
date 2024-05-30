@@ -1,0 +1,651 @@
+openapi: 3.0.0
+servers:
+  - url: https://stats.pika-network.net/api
+info:
+  description: Official Pika Network API used for getting stats of users, and leaderboards.
+  version: "1.0.0"
+  title: Pika Network Stats API
+  contact:
+    email: mallusrgreat@duck.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: Leaderboard
+    description: Leaderboard stuff
+paths:
+  /leaderboards/total:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get Collective Leaderboard Data
+      operationId: totalLeaderboard
+      parameters:
+        - $ref: '#/components/parameters/gamemode'
+        - $ref: '#/components/parameters/interval'
+      responses:
+        '200':
+          description: collective leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TotalLeaderboard'
+        '429':
+          description: rate limit reached
+  /factionstop:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get Top Factions
+      operationId: factionsTop
+      parameters:
+        - in: query
+          name: type
+          required: true
+          schema:
+            type: string
+            enum: [opfactions]
+            example: opfactions
+      responses:
+        '200':
+          description: success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactionsTop'
+  /leaderboards:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get Leaderboard Entries
+      operationId: leaderboard
+      parameters:
+        - $ref: '#/components/parameters/gamemode'
+        - $ref: '#/components/parameters/mode'
+        - $ref: '#/components/parameters/interval'
+        - $ref: "#/components/parameters/stat"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/limit"
+      responses:
+        '200':
+          description: leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Leaderboard'
+        '400':
+          description: invalid query
+        '429':
+          description: rate limit reached
+  /profile/{username}/leaderboard:
+    get:
+      tags:
+        - Leaderboard
+      summary: Get Player Leaderboard Entries
+      operationId: profileLeaderboard
+      parameters: 
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/gamemode'
+        - $ref: '#/components/parameters/interval'
+        - $ref: '#/components/parameters/mode'
+      responses:
+        '200':
+          description: successfully got leaderboard data on user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileLeaderboard'
+        '400':
+          description: bad query
+        '404':
+          description: user with this username was not found
+        '429':
+          description: rate limit reached
+  /profile/{username}:
+    get:
+      summary: Get Player Data
+      parameters:
+        - in: path
+          name: username
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successfully got data about user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '404':
+          description: user with this username was not found
+        '429':
+          description: rate limit reached
+  /recaps/{id}:
+    get:
+      summary: Get Recap Data
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: successfully got recap data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Recap'
+        '400':
+          description: invalid recap id
+        '404':
+          description: recap not found
+        '429':
+          description: rate limit reached
+      
+components:
+  parameters:
+    offset:
+      in: query
+      name: offset
+      description: the offset that will determine from which place the leaderboard should start from
+      schema:
+        type: integer
+        default: 0
+        example: 0
+        minimum: 0
+    limit:
+      in: query
+      name: limit
+      description: the limit to the amount of entries shown
+      schema:
+        type: integer
+        minimum: 0
+        maximum: 25
+        example: 25
+    stat:
+      in: query
+      name: stat
+      description: the stat to get the leaderboards of
+      example: Kills
+      schema:
+        type: string
+        example: Kills
+    interval:
+      in: query
+      name: interval
+      description: the duration for the leaderboard
+      required: true
+      schema:
+        type: string
+        enum: [weekly, monthly, total]
+        example: total
+    mode:
+      in: query
+      name: mode
+      required: true
+      example: ALL_MODES
+      schema:
+        type: string
+        enum: [SOLO, DOUBLES, TRIPLES, QUAD, ALL_MODES]
+        example: ALL_MODES
+    gamemode:
+      in: query
+      name: type
+      description: the gamemode to get the stats of
+      required: true
+      example: skywars
+      schema:
+        type: string
+        enum: [opfactions, opprison, opskyblock, skywars, bedwars, classicskyblock, survival, kitpvp, unrankedpractice, rankedpractice, bedwars, lifesteal, oplifesteal, skypvp]
+        example: skywars
+  schemas:
+    FactionsTop:
+      type: array
+      items:
+        type: object
+        properties:
+          factionTag:
+            type: string
+            example: Myth
+          place:
+            type: integer
+            example: 1
+          worth:
+            type: integer
+            example: 216125000000
+          factionData:
+            type: object
+            properties:
+              faction:
+                type: string
+                example: 151
+              worth:
+                type: string
+                example: 216,125,000,000
+              place:
+                type: integer
+                example: 1
+              active_strikes:
+                type: integer
+                example: 0
+              total_strikes:
+                type: integer
+                example: 0
+              owner:
+                type: string
+                example: Finnesing
+              founded_date:
+                type: integer
+                example: 1713563216964
+              members:
+                type: array
+                example:
+                  - +Kriyusinferno
+                  - '**KingPhix'
+                  - +Piq
+                  - +Squidyboi21
+                  - '***Finnesing'
+                items:
+                  type: string
+              blocks:
+                type: object
+                example:
+                  PIGZOMBIE: 24
+                  ZOMBIE: 7
+                  SILVERFISH: 512
+                  BLAZE: 408
+                  IRONGOLEM: 491
+              spawners:
+                type: object
+                example:
+                  PIGZOMBIE: 1
+                  ZOMBIE: 1
+                  SILVERFISH: 2
+                  BLAZE: 1
+                  IRONGOLEM: 1
+              creationTime:
+                type: object
+                example: 2024-04-27T19:59:05
+    Leaderboard:
+      type: object
+      required:
+        - metadata
+        - entries
+      properties:
+        metadata:
+          type: object
+          properties:
+            total:
+              type: number
+              example: 9508
+        entries:
+          type: array
+          items:
+            type: object
+            example:
+              - place: 1
+                value: "2325"
+                id: nonameeee1
+                rank: Titan
+                clan: NEXUS
+              - place: 2
+                value: "1732"
+                id: Yoisaki_Kanade_
+                rank: Titan
+                clan: TheNone
+              - place: 3
+                value: "1624"
+                id: worm6
+                rank: VIP
+                clan: Fallen
+            properties:
+              place:
+                type: integer
+                example: 1
+              value:
+                type: string
+                example: "2325"
+              id:
+                type: string
+                example: nonameeee1
+                description: username
+              rank:
+                type: string
+                example: Titan
+              clan:
+                type: string
+                example: NEXUS
+    TotalLeaderboard:
+      type: object
+      required:
+        - name
+        - total
+        - average
+        - sum
+      properties:
+        name:
+          type: string
+          example: Kills
+        total:
+          type: number
+          format: float
+          example: 1796.0
+        average:
+          type: number
+          format: float
+          example: 14.99
+        sum:
+          type: number
+          format: float
+          example: 26926.0
+    ProfileLeaderboard:
+      type: object
+      example:
+        "Highest winstreak reached":
+          metadata:
+            total: 149809
+          entries:
+            - place: 7953
+              value: "5"
+              id: mallusrgreat
+        Losses:
+          metadata:
+            total: 1019392
+          entries:
+            - place: 4593
+              value: "1585"
+              id: mallusrgreat
+        "Bow kills":
+          metadata:
+            total: 206510
+          entries:
+            - place: 24009
+              value: "11"
+              id: mallusrgreat
+    Recap:
+      type: object
+      example:
+        id: fa0665b1-3229-42ab-a4a9-dfa1f005552a
+        mapName: Eastwood
+        gameType: BedWars
+        gameServerName: BW3-bmjhq-nrh6g
+        gameStart: 2024-04-14T18:22:30.451+00:00
+        gameDuration: 4 minutes 36 seconds
+        users:
+          - username: BLOODENDERMAN
+            stats:  
+              "Time of death": "1m 39s"
+              "Time of death (ms)": 99338
+              "Blocks placed": "10"
+              "Blocks moved": "184"
+              "Resources collected": "52"
+              "Deaths": "3"
+              "Items bought": "8"
+              "Beds destroyed": 0
+              "Assists": 0
+              "Final kills": 0
+              "Kills": 0
+              "Blocks mined": 0
+          - username: bamboo900
+            stats:
+              "Time of death": "1m 45s"
+              "Time of death (ms)": 105289
+              "Blocks placed": "26"
+              "Blocks moved": "211"
+              "Resources collected": "19"
+              "Deaths": "3"
+              "Items bought": "8"
+              "Beds destroyed": 0
+              "Assists": 0
+              "Final kills": 0
+              "Kills": 0
+              "Blocks mined": 0
+          - username: Hassan12org
+            stats:
+              "Assists": "1"
+              "Time of death": "2m 30s"
+              "Time of death (ms)": 150436
+              "Blocks placed": "49"
+              "Blocks moved": "337"
+              "Resources collected": "40"
+              "Kills": "1"
+              "Deaths": "4"
+              "Items bought": "9"
+              "Beds destroyed": 0
+              "Final kills": 0
+              "Blocks mined": 0
+        winners:
+          - Circuxt
+          - DarkProsLegacy
+          - qFamed
+        stats:
+          - "Beds destroyed"
+          - "Assists"
+          - "Time of death"
+          - "Blocks placed"
+          - "Blocks moved"
+          - "Resources collected"
+          - "Final kills"
+          - "Kills"
+          - "Deaths"
+          - "Items bought"
+          - "Blocks mined"
+      properties:
+        id:
+          type: string
+        mapName:
+          type: string
+        gameType:
+          type: string
+        gameServerName:
+          type: string
+        gameStart:
+          type: string
+        gameDuration:
+          type: string
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              username:
+                type: string
+              stats:
+                type: object
+                properties:
+                  Time of death:
+                    type: string
+                  Time of death (ms):
+                    type: integer
+                  Blocks placed:
+                    type: string
+                  Blocks moved:
+                    type: string
+                  Resources collected:
+                    type: string
+                  Deaths:
+                    type: string
+                  Items bought:
+                    type: string
+                  Beds destroyed:
+                    type: integer
+                  Assists:
+                    type: integer
+                  Final kills:
+                    type: integer
+                  Kills:
+                    type: integer
+                  Blocks mined:
+                    type: integer
+                required:
+                  - Time of death
+                  - Time of death (ms)
+                  - Blocks placed
+                  - Blocks moved
+                  - Resources collected
+                  - Deaths
+                  - Items bought
+                  - Beds destroyed
+                  - Assists
+                  - Final kills
+                  - Kills
+                  - Blocks mined
+            required:
+              - username
+              - stats
+        winners:
+          type: array
+          items:
+            type: string
+        stats:
+          type: array
+          items:
+            type: string
+      required:
+      - id
+      - mapName
+      - gameType
+      - gameServerName
+      - gameStart
+      - gameDuration
+      - users
+      - winners
+      - stats
+
+    Profile:
+      type: object
+      required:
+        - username
+        - friends
+        - lastSeen
+        - rank
+        - ranks
+        - clan
+        - discord_verified
+        - email_verified
+        - discord_boosting
+      properties:
+        username:
+          type: string
+          example: Patolunix
+        friends:
+          type: object
+          example:
+            - username: _MrDynamite
+            - username: balaclav4
+            - username: FintanFire
+          properties:
+            username:
+              type: string
+        lastSeen:
+          type: integer
+          example: 1716683740323
+        rank:
+          type: object
+          properties:
+            level:
+              type: integer
+              example: 100
+            experience:
+              type: integer
+            percentage:
+              type: integer
+            rankDisplay:
+              type: string
+              example: "&8[&fYou&cTube&8]&f "
+        ranks:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "kitpvp4"
+              displayName:
+                type: string
+                example: "Ultimate"
+              server:
+                type: string
+                example: "kitpvp"
+              season:
+                type: boolean
+                nullable: true
+                example: null
+              expiry:
+                type: number
+                example: -1
+        clan:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "Gem"
+            tag:
+              type: string
+              example: "❀GEM❀"
+            currentTrophies:
+              type: integer
+              deprecated: true
+            creationTime:
+              type: string
+              example: "2022-05-13T20:23:36"
+            members:
+              type: array
+              example: 
+                - user: 
+                    username: YethPasBo
+                  joinDate: "2022-05-13T20:23:36"
+                - user:
+                    username: Dwxier
+                  joinDate: "2024-03-02T19:38:20"
+                - user:
+                    username: Flame_Was_Taken
+                  joinDate: "2024-05-08T15:03:11"
+              items:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    properties:
+                      username:
+                        type: string
+                  joinDate:
+                    type: string
+            owner:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: Arrly
+            leveling:
+              type: object
+              properties:
+                level:
+                  type: integer
+                  example: 83
+                exp:
+                  type: integer
+                  example: 203326
+                totalExp:
+                  type: integer
+                  example: 6122250
+        discord_verified:
+          type: boolean
+          example: true
+        email_verified:
+          type: boolean
+          example: true
+        discord_boosting:
+          type: boolean
+          example: false
